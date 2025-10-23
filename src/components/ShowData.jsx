@@ -29,14 +29,14 @@ const Modal = ({ show, onClose, title, children }) => {
 
 const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQaItem }) => {
   const [editingId, setEditingId] = useState(null);
-  const [editFields, setEditFields] = useState({ question: '', answer: '' });
+  const [editFields, setEditFields] = useState({ question: '', answer: '', correct_answer: '' });
   const [modalParagraph, setModalParagraph] = useState(null);
   const [searchText, setSearchText] = useState('');
   const [showDuplicates, setShowDuplicates] = useState(false);
 
-  const startEdit = (id, question, answer) => {
+  const startEdit = (id, question, answer, correct_answer) => {
     setEditingId(id);
-    setEditFields({ question, answer });
+    setEditFields({ question, answer, correct_answer: correct_answer || '' });
   };
 
   const saveEdit = id => {
@@ -52,7 +52,8 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
     return questionAnswerData.filter(
       item =>
         item.question.toLowerCase().includes(lower) ||
-        item.answer.toLowerCase().includes(lower)
+        item.answer.toLowerCase().includes(lower) ||
+        (item.correct_answer && item.correct_answer.toLowerCase().includes(lower))
     );
   }, [searchText, questionAnswerData, showDuplicates]);
 
@@ -87,7 +88,7 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
   };
 
   return (
-    <div className="overflow-auto max-h-[650px] p-4 bg-white rounded shadow relative">
+    <div className="overflow-auto max-h-[650px] p-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded shadow relative">
       <h2 className="text-2xl font-bold mb-4">
         সংরক্ষিত প্রশ্ন ও উত্তর ({questionAnswerData.length})
       </h2>
@@ -99,7 +100,7 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
           placeholder="প্রশ্ন বা উত্তর অনুসন্ধান করুন..."
           value={searchText}
           onChange={e => setSearchText(e.target.value)}
-          className="flex-1 p-2 border border-gray-300 rounded text-sm"
+          className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 dark:text-gray-100"
           disabled={showDuplicates}
         />
         <button
@@ -152,7 +153,12 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
                     className="w-full md:w-1/2 border border-red-400 rounded p-3 bg-white shadow"
                   >
                     <p className="mb-2 font-semibold text-gray-800">{item.question}</p>
-                    <p className="mb-4 text-gray-600">{item.answer}</p>
+                    <p className="mb-2 text-gray-600"><strong>উত্তর:</strong> {item.answer}</p>
+                    {item.correct_answer && (
+                      <p className="mb-4 text-gray-600 text-sm">
+                        <strong>সঠিক উত্তর:</strong> {item.correct_answer}
+                      </p>
+                    )}
                     <button
                       onClick={() => deleteDuplicate(item.id)}
                       className="text-red-600 border border-red-600 rounded px-3 py-1 hover:bg-red-50 text-sm"
@@ -165,7 +171,7 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
             </div>
           ))}
           {duplicatesByParagraph.size === 0 && (
-            <p className="text-gray-500">কোনো ডুপ্লিকেট পাওয়া যায়নি।</p>
+            <p className="text-gray-500">কোনো ডুপ্লিকেট পাওয়া যায়নি।</p>
           )}
         </>
       )}
@@ -174,7 +180,7 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
       {!showDuplicates && (
         <>
           {filteredData.length === 0 ? (
-            <p className="text-gray-500">কোনো ডেটা পাওয়া যায়নি।</p>
+            <p className="text-gray-500">কোনো ডেটা পাওয়া যায়নি।</p>
           ) : (
             filteredData.map((item, index) => (
               <div
@@ -195,6 +201,7 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
 
                 {editingId === item.id ? (
                   <>
+                    <label className="block text-xs font-semibold mb-1 text-gray-600">প্রশ্ন:</label>
                     <textarea
                       rows={2}
                       className="w-full p-2 border border-blue-400 rounded mb-2 text-sm"
@@ -203,12 +210,22 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
                         setEditFields({ ...editFields, question: e.target.value })
                       }
                     />
+                    <label className="block text-xs font-semibold mb-1 text-gray-600">উত্তর:</label>
                     <textarea
                       rows={2}
                       className="w-full p-2 border border-blue-400 rounded mb-2 text-sm"
                       value={editFields.answer}
                       onChange={(e) =>
                         setEditFields({ ...editFields, answer: e.target.value })
+                      }
+                    />
+                    <label className="block text-xs font-semibold mb-1 text-gray-600">সঠিক উত্তর:</label>
+                    <textarea
+                      rows={2}
+                      className="w-full p-2 border border-blue-400 rounded mb-2 text-sm"
+                      value={editFields.correct_answer}
+                      onChange={(e) =>
+                        setEditFields({ ...editFields, correct_answer: e.target.value })
                       }
                     />
                     <button
@@ -229,13 +246,18 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
                     <p className="text-sm font-semibold mb-1">
                       <strong>Q{index + 1}:</strong> {item.question}
                     </p>
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-gray-700 mb-1">
                       <strong>A:</strong> {item.answer}
                     </p>
+                    {item.correct_answer && (
+                      <p className="text-sm text-gray-600 mb-2">
+                        <strong>সঠিক উত্তর:</strong> {item.correct_answer}
+                      </p>
+                    )}
                     <div className="mt-3 space-x-2">
                       <button
                         onClick={() =>
-                          startEdit(item.id, item.question, item.answer)
+                          startEdit(item.id, item.question, item.answer, item.correct_answer)
                         }
                         className="text-blue-600 border border-blue-600 rounded px-3 py-1 text-sm hover:bg-blue-50"
                       >
@@ -262,7 +284,7 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
         onClose={() => setModalParagraph(null)}
         title="প্যারাগ্রাফ"
       >
-        <p className="text-gray-800 whitespace-pre-wrap">{modalParagraph}</p>
+        <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{modalParagraph}</p>
       </Modal>
     </div>
   );

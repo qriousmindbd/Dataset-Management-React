@@ -13,23 +13,23 @@ const HelpModal = ({ show, onClose, title, steps }) => {
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 relative">
+        <div className="bg-white dark:bg-gray-800 dark:text-gray-100 rounded-lg shadow-xl max-w-lg w-full p-6 relative">
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 text-xl text-gray-600 hover:text-black"
+            className="absolute top-3 right-3 text-xl text-gray-600 dark:text-gray-200 hover:text-black"
           >
             ×
           </button>
 
-          <h2 className="text-lg font-bold text-indigo-700 mb-4">{title}</h2>
-          <ol className="list-decimal list-inside text-sm text-gray-700 space-y-2">
+          <h2 className="text-lg font-bold text-indigo-700 dark:text-indigo-300 mb-4">{title}</h2>
+          <ol className="list-decimal list-inside text-sm text-gray-700 dark:text-gray-200 space-y-2">
             {steps.map((step, index) => (
               <li key={index} dangerouslySetInnerHTML={{ __html: step }} />
             ))}
           </ol>
 
-          <p className="mt-4 text-sm text-gray-600">
-            ✅ নিরাপত্তা টিপ: আপনার API কী কারও সাথে শেয়ার করবেন না।
+          <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">
+            ✅ নিরাপত্তা টিপ: আপনার API কী কারও সাথে শেয়ার করবেন না।
           </p>
 
           <button

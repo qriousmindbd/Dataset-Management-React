@@ -6,10 +6,11 @@ const QA_SCHEMA = {
   items: {
     type: "OBJECT",
     properties: {
-      question: { type: "STRING", description: "বাংলায় একটি সংক্ষিপ্ত প্রশ্ন।" },
+      question: { type: "STRING", description: "বাংলায় একটি সংক্ষিপ্ত প্রশ্ন।" },
       answer: { type: "STRING", description: "ইংরেজিতে 'yes', 'no' বা 'idk'।" },
+      correct_answer: { type: "STRING", description: "প্যারাগ্রাফ থেকে এক বাক্যে সঠিক উত্তর।" },
     },
-    required: ["question", "answer"],
+    required: ["question", "answer", "correct_answer"],
   },
 };
 
@@ -39,12 +40,18 @@ const InputData = ({
   const totalQuestions = numYes + numNo + numIdk;
 
   const buildSystemPrompt = () => {
-    return `আপনি মোট ${totalQuestions} টি সংক্ষিপ্ত প্রশ্ন জেনারেট করবেন।
-- সব প্রশ্ন হবে বাংলায়।
-- সব উত্তর হবে ইংরেজিতে "yes", "no" বা "idk"।
-- হ্যাঁ উত্তরযুক্ত হবে ${numYes} টি, না ${numNo} টি, এবং idk ${numIdk} টি প্রশ্ন।
-- আউটপুট হবে শুধুমাত্র JSON অ্যারে।
-প্যারাগ্রাফ: ${paragraph}`;
+  return `নিচের প্যারাগ্রাফ থেকে ${totalQuestions} টি প্রশ্ন তৈরি করুন।
+
+**নিয়ম:**
+- প্রশ্ন: সম্পূর্ণ বাংলায়
+- answer: শুধু "yes", "no" বা "idk" (ইংরেজিতে)
+- correct_answer: সম্পূর্ণ বাংলায় প্যারাগ্রাফ থেকে এক বাক্যে উত্তর
+- বিতরণ: ${numYes} টি yes, ${numNo} টি no, ${numIdk} টি idk
+
+**আউটপুট:** শুধুমাত্র JSON অ্যারে
+
+**প্যারাগ্রাফ:**
+${paragraph}`;
   };
 
   const generateQa = async () => {
@@ -92,7 +99,7 @@ const InputData = ({
           setGeneratedQa((prev) => {
             const next = Array.isArray(data) ? data : [];
             const needed = prev.length > next.length ? prev.length - next.length : 0;
-            return [...next, ...Array(needed).fill({ question: "", answer: "" })];
+            return [...next, ...Array(needed).fill({ question: "", answer: "", correct_answer: "" })];
           });
           setIsGenerating(false);
           return;
@@ -118,7 +125,7 @@ const InputData = ({
   };
 
   const addRow = () => {
-    setGeneratedQa((prev) => [...prev, { question: "", answer: "" }]);
+    setGeneratedQa((prev) => [...prev, { question: "", answer: "", correct_answer: "" }]);
   };
 
   return (
@@ -141,7 +148,7 @@ const InputData = ({
           <input
             type="password"
             placeholder="API কী দিন"
-            className="w-full p-2 border border-gray-300 rounded text-sm bg-white"
+            className="w-full p-2 border border-gray-300 rounded text-sm bg-white dark:bg-gray-700 dark:text-gray-100"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             disabled={isGenerating}
@@ -149,34 +156,34 @@ const InputData = ({
         </div>
 
         {/* Question counts */}
-        <div className="min-w-[80px]">
+        <div className="min-w-20">
           <label className="block mb-1 font-semibold">হ্যাঁ প্রশ্ন</label>
           <input
             type="number"
             min={0}
-            className="w-full p-1 border border-gray-300 rounded text-center bg-white text-sm"
+            className="w-full p-1 border border-gray-300 rounded text-center bg-white dark:bg-gray-700 dark:text-gray-100 text-sm"
             value={numYes}
             onChange={(e) => setNumYes(Math.max(0, +e.target.value))}
             disabled={isGenerating}
           />
         </div>
-        <div className="min-w-[80px]">
+        <div className="min-w-20">
           <label className="block mb-1 font-semibold">না প্রশ্ন</label>
           <input
             type="number"
             min={0}
-            className="w-full p-1 border border-gray-300 rounded text-center bg-white text-sm"
+            className="w-full p-1 border border-gray-300 rounded text-center bg-white dark:bg-gray-700 dark:text-gray-100 text-sm"
             value={numNo}
             onChange={(e) => setNumNo(Math.max(0, +e.target.value))}
             disabled={isGenerating}
           />
         </div>
-        <div className="min-w-[80px]">
+        <div className="min-w-20">
           <label className="block mb-1 font-semibold">তথ্যগত (idk)</label>
           <input
             type="number"
             min={0}
-            className="w-full p-1 border border-gray-300 rounded text-center bg-white text-sm"
+            className="w-full p-1 border border-gray-300 rounded text-center bg-white dark:bg-gray-700 dark:text-gray-100 text-sm"
             value={numIdk}
             onChange={(e) => setNumIdk(Math.max(0, +e.target.value))}
             disabled={isGenerating}
@@ -187,11 +194,11 @@ const InputData = ({
       {/* Paragraph and generate button side-by-side */}
       <div className="flex gap-4 items-center">
         <div className="grow">
-          <label className="block mb-1 font-semibold text-sm">প্যারাগ্রাফ (বাংলায়)</label>
+          <label className="block mb-1 font-semibold text-sm">প্যারাগ্রাফ (বাংলায়)</label>
           <textarea
             rows={6}
             placeholder="প্যারাগ্রাফ লিখুন"
-            className="w-full p-2 border border-gray-300 rounded text-sm resize-none bg-white"
+            className="w-full p-2 border border-gray-300 rounded text-sm resize-none bg-white dark:bg-gray-700 dark:text-gray-100"
             value={paragraph}
             onChange={(e) => setParagraph(e.target.value)}
             disabled={isGenerating}
@@ -238,10 +245,10 @@ const InputData = ({
 
       {/* Manual Q&A editor - always visible */}
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-gray-800 text-sm">প্রশ্ন-উত্তর সম্পাদনা</h3>
+        <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">প্রশ্ন-উত্তর সম্পাদনা</h3>
         <button
           onClick={addRow}
-          className="text-sm px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+          className="text-sm px-3 py-1 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
           type="button"
           disabled={isGenerating}
         >
@@ -249,29 +256,37 @@ const InputData = ({
         </button>
       </div>
 
-      <div className="max-h-[480px] overflow-y-auto border border-gray-300 rounded p-2 space-y-2 bg-white">
+      <div className="max-h-[480px] overflow-y-auto border border-gray-300 dark:border-gray-600 rounded p-2 space-y-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
         {generatedQa.map((qa, idx) => (
           <div key={idx} className="flex items-start gap-2" aria-label={`প্রশ্ন উত্তর #${idx + 1}`}>
-            <div className="w-6 text-center select-none pt-2 text-gray-600">{idx + 1}</div>
+            <div className="w-6 text-center select-none pt-2 text-gray-600 dark:text-gray-400">{idx + 1}</div>
             <textarea
               rows={2}
               value={qa.question || ""}
               onChange={(e) => handleEditChange(idx, "question", e.target.value)}
-              className="flex-1 p-1 border border-gray-400 rounded text-sm resize-none bg-white"
-              placeholder="প্রশ্ন লিখুন (বাংলায়)"
+              className="flex-1 p-1 border border-gray-400 dark:border-gray-600 rounded text-sm resize-none bg-white dark:bg-gray-700 dark:text-gray-100"
+              placeholder="প্রশ্ন লিখুন (বাংলায়)"
               disabled={isGenerating}
             />
             <textarea
               rows={2}
               value={qa.answer || ""}
               onChange={(e) => handleEditChange(idx, "answer", e.target.value)}
-              className="w-32 p-1 border border-gray-400 rounded text-sm resize-none text-center bg-white"
+              className="w-32 p-1 border border-gray-400 dark:border-gray-600 rounded text-sm resize-none text-center bg-white dark:bg-gray-700 dark:text-gray-100"
               placeholder="yes/no/idk"
+              disabled={isGenerating}
+            />
+            <textarea
+              rows={2}
+              value={qa.correct_answer || ""}
+              onChange={(e) => handleEditChange(idx, "correct_answer", e.target.value)}
+              className="flex-1 p-1 border border-gray-400 dark:border-gray-600 rounded text-sm resize-none bg-white dark:bg-gray-700 dark:text-gray-100"
+              placeholder="সঠিক উত্তর (এক বাক্যে)"
               disabled={isGenerating}
             />
             <button
               onClick={() => handleDelete(idx)}
-              className="text-red-600 text-lg font-bold leading-none hover:underline select-none"
+              className="text-red-600 dark:text-red-500 text-lg font-bold leading-none hover:underline select-none"
               disabled={isGenerating}
               type="button"
               title="সারি মুছুন"
@@ -285,7 +300,7 @@ const InputData = ({
       {/* Add to Dataset */}
       <button
         onClick={addParagraphData ? () => addParagraphData(paragraph, generatedQa) : undefined}
-        className="mt-2 bg-green-600 text-white py-2 px-6 rounded text-sm hover:bg-green-700"
+        className="mt-2 bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded text-sm disabled:opacity-60 disabled:cursor-not-allowed"
         disabled={isGenerating || !addParagraphData}
       >
         ডেটাসেটে যোগ করুন
@@ -295,17 +310,16 @@ const InputData = ({
       <HelpModal
         show={showApiHelp}
         onClose={() => setShowApiHelp(false)}
-        title="Gemini API Key পাওয়ার ধাপসমূহ"
+        title="Gemini API Key পাওয়ার ধাপসমূহ"
         steps={[
           "<strong>ধাপ ১:</strong> আপনার Google অ্যাকাউন্টে লগইন করুন।",
-          '<strong>ধাপ ২:</strong> যান <a href="https://aistudio.google.com" target="_blank" class="text-blue-600 underline">Google AI Studio</a> ওয়েবসাইটে।',
-          '<strong>ধাপ ৩:</strong> “Get API key in Google AI Studio” বোতামটি ক্লিক করুন।',
-          "<strong>ধাপ ৪:</strong> Terms of Service পড়ুন এবং সম্মতি দিন।",
-          "<strong>ধাপ ৫:</strong> তৈরি হওয়া API key কপি করে এখানে পেস্ট করুন।",
+          '<strong>ধাপ ২:</strong> যান <a href="https://aistudio.google.com" target="_blank" class="text-blue-600 underline">Google AI Studio</a> ওয়েবসাইটে।',
+          '<strong>ধাপ ৩:</strong> "Get API key in Google AI Studio" বোতামটি ক্লিক করুন।',
+          "<strong>ধাপ ৪:</strong> Terms of Service পড়ুন এবং সম্মতি দিন।",
+          "<strong>ধাপ ৫:</strong> তৈরি হওয়া API key কপি করে এখানে পেস্ট করুন।",
         ]}
       />
     </div>
   );
 };
-
 export default InputData;

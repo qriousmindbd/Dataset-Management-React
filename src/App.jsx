@@ -14,10 +14,30 @@ const LOCAL_STORAGE_KEYS = {
   idkCount: 'num_idk_questions',
   paraDataset: 'paragraph_dataset',
   qaDataset: 'qa_dataset',
+  theme: 'app_theme', // Theme key for dark/light mode persistence
 };
 
 const App = () => {
   const [currentSection, setCurrentSection] = useState('input');
+
+  // Theme state and persistence
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem(LOCAL_STORAGE_KEYS.theme) === 'dark'
+  );
+
+  useEffect(() => {
+    console.log('dark mode:', darkMode);
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem(LOCAL_STORAGE_KEYS.theme, 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem(LOCAL_STORAGE_KEYS.theme, 'light');
+    }
+  }, [darkMode]);
+
+  // Sidebar open state for mobile
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Lifted states persisted locally
   const [apiKey, setApiKey] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.apiKey) || '');
@@ -35,7 +55,12 @@ const App = () => {
 
   const [questionAnswerData, setQuestionAnswerData] = useState(() => {
     const data = localStorage.getItem(LOCAL_STORAGE_KEYS.qaDataset);
-    return data ? JSON.parse(data) : [];
+    // Migrate old data to include correct_answer field if missing
+    const parsed = data ? JSON.parse(data) : [];
+    return parsed.map(item => ({
+      ...item,
+      correct_answer: item.correct_answer || '' // Add field if missing
+    }));
   });
 
   // Persist all relevant states to localStorage on change
@@ -76,6 +101,7 @@ const App = () => {
       paragraphKey: paraKey,
       question: item.question,
       answer: item.answer,
+      correct_answer: item.correct_answer || '', // Include correct_answer field
     }));
 
     setQuestionAnswerData(prev => [...prev, ...newQaItems]);
@@ -99,11 +125,36 @@ const App = () => {
     setQuestionAnswerData(prev => prev.filter(item => item.id !== id));
   };
 
+  // Handler to update a QA item (with all fields including correct_answer)
+  const updateQaItem = (id, updatedFields) => {
+    setQuestionAnswerData(prev =>
+      prev.map(item => (item.id === id ? { ...item, ...updatedFields } : item))
+    );
+  };
+
   return (
     <>
-      <div className="flex font-[Inter] min-h-screen bg-gray-50">
-        <Sidebar currentSection={currentSection} setCurrentSection={setCurrentSection} />
+      <div className="flex font-[Inter] min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+        <Sidebar
+          currentSection={currentSection}
+          setCurrentSection={setCurrentSection}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+          isOpen={sidebarOpen}
+          setIsOpen={setSidebarOpen}
+        />
         <main className="flex-1 p-8 lg:p-10 overflow-auto">
+          {/* Mobile hamburger */}
+          <div className="mb-4 lg:hidden">
+            <button
+              aria-label="Open sidebar"
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 rounded bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow"
+            >
+              <i className="bi bi-list text-xl"></i>
+            </button>
+          </div>
+
           {currentSection === 'input' && (
             <InputData
               apiKey={apiKey}
@@ -126,11 +177,7 @@ const App = () => {
             <ShowData
               paragraphDataSet={paragraphDataSet}
               questionAnswerData={questionAnswerData}
-              updateQaItem={(id, qa) => {
-                setQuestionAnswerData(prev =>
-                  prev.map(item => (item.id === id ? { ...item, ...qa } : item))
-                );
-              }}
+              updateQaItem={updateQaItem}
               removeQaItem={removeQaItem}
             />
           )}
@@ -148,11 +195,11 @@ const App = () => {
         </main>
       </div>
 
-      {/* Error modal */}
       <Modal show={!!error} onClose={() => setError(null)} title="ত্রুটি">
         {error}
       </Modal>
     </>
   );
 };
+
 export default App;
