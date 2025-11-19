@@ -1,28 +1,33 @@
-import React from "react";
+import React, { useState } from "react";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import { CSVLink } from "react-csv";
+import NotificationModal from "./NotificationModal";
 
 const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
+  const [notification, setNotification] = useState(null);
+
   const downloadJSON = (content, filename) => {
     try {
-      if (!content || (Array.isArray(content) && content.length === 0)) {
-        throw new Error("No data to download.");
+      if (!content || (Array.isArray(content) && content.length === 0) || Object.keys(content).length === 0) {
+        setNotification("JSON ডাউনলোডের জন্য কোনো ডেটা নেই।");
+        return;
       }
       const blob = new Blob([JSON.stringify(content, null, 2)], {
         type: "application/json",
       });
       saveAs(blob, filename);
     } catch (error) {
-      alert("JSON ডাউনলোডে সমস্যা হয়েছে: " + error.message);
+      setNotification("JSON ডাউনলোডে সমস্যা হয়েছে: " + error.message);
       console.error("JSON Download Error:", error);
     }
   };
 
   const downloadXLSX = (data, filename) => {
     try {
-      if (!data || (Array.isArray(data) && data.length === 0)) {
-        throw new Error("No data to download.");
+      if (!data || (Array.isArray(data) && data.length === 0) || Object.keys(data).length === 0) {
+        setNotification("XLSX ডাউনলোডের জন্য কোনো ডেটা নেই।");
+        return;
       }
 
       let xlsxData = [];
@@ -44,7 +49,7 @@ const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
       const blob = new Blob([wbout], { type: "application/octet-stream" });
       saveAs(blob, filename);
     } catch (error) {
-      alert("XLSX ডাউনলোডে সমস্যা হয়েছে: " + error.message);
+      setNotification("XLSX ডাউনলোডে সমস্যা হয়েছে: " + error.message);
       console.error("XLSX Download Error:", error);
     }
   };
@@ -87,7 +92,7 @@ const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
   const mergedData = mergeDatasets();
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded shadow max-w-4xl mx-auto transition-colors duration-300">
+    <div className="p-4 sm:p-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded shadow max-w-4xl mx-auto transition-colors duration-300">
       <h2 className="text-2xl font-bold mb-6 text-indigo-700 dark:text-indigo-300">
         ডেটাসেট ডাউনলোড করুন
       </h2>
@@ -111,7 +116,7 @@ const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
             onClick={(event) => {
               if (!mergedData.length) {
                 event.preventDefault();
-                alert("CSV ডাউনলোডের জন্য কোনো ডেটা নেই।");
+                setNotification("CSV ডাউনলোডের জন্য কোনো ডেটা নেই।");
               }
             }}
           >
@@ -145,7 +150,7 @@ const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
             onClick={(event) => {
               if (!paragraphCsvData.length) {
                 event.preventDefault();
-                alert("CSV ডাউনলোডের জন্য কোনো ডেটা নেই।");
+                setNotification("CSV ডাউনলোডের জন্য কোনো ডেটা নেই।");
               }
             }}
           >
@@ -179,7 +184,7 @@ const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
             onClick={(event) => {
               if (!safeQuestionAnswerData.length) {
                 event.preventDefault();
-                alert("CSV ডাউনলোডের জন্য কোনো ডেটা নেই।");
+                setNotification("CSV ডাউনলোডের জন্য কোনো ডেটা নেই।");
               }
             }}
           >
@@ -193,6 +198,14 @@ const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
           </button>
         </div>
       </div>
+
+      <NotificationModal
+        show={!!notification}
+        onClose={() => setNotification(null)}
+        title="বিজ্ঞপ্তি"
+      >
+        {notification}
+      </NotificationModal>
     </div>
   );
 };

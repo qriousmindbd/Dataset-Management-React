@@ -3,8 +3,9 @@ import Sidebar from './components/Sidebar';
 import InputData from './components/InputData';
 import ShowData from './components/ShowData';
 import DownloadData from './components/DownloadData';
+import NotificationModal from './components/NotificationModal';
 import ViewTables from './components/ViewTables';
-import Modal from './components/Modal';
+import Navbar from './components/Navbar';
 
 const LOCAL_STORAGE_KEYS = {
   apiKey: 'gemini_api_key',
@@ -133,8 +134,9 @@ const App = () => {
   };
 
   return (
-    <>
-      <div className="flex font-[Inter] min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+      <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+      <div className="flex flex-1">
         <Sidebar
           currentSection={currentSection}
           setCurrentSection={setCurrentSection}
@@ -143,18 +145,7 @@ const App = () => {
           isOpen={sidebarOpen}
           setIsOpen={setSidebarOpen}
         />
-        <main className="flex-1 p-8 lg:p-10 overflow-auto">
-          {/* Mobile hamburger */}
-          <div className="mb-4 lg:hidden">
-            <button
-              aria-label="Open sidebar"
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow"
-            >
-              <i className="bi bi-list text-xl"></i>
-            </button>
-          </div>
-
+        <main className="flex-1 p-4 lg:p-8 overflow-auto">
           {currentSection === 'input' && (
             <InputData
               apiKey={apiKey}
@@ -171,6 +162,7 @@ const App = () => {
               setGeneratedQa={setGeneratedQa}
               setError={setError}
               addParagraphData={addParagraphData}
+              paragraphDataSet={paragraphDataSet}
             />
           )}
           {currentSection === 'show' && (
@@ -195,10 +187,10 @@ const App = () => {
         </main>
       </div>
 
-      <Modal show={!!error} onClose={() => setError(null)} title="ত্রুটি">
+      <NotificationModal show={!!error} onClose={() => setError(null)} title="ত্রুটি">
         {error}
-      </Modal>
-    </>
+      </NotificationModal>
+    </div>
   );
 };
 

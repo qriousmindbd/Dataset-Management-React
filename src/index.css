@@ -2,4 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply text-sm sm:text-base;
+  }
+}
+
 /* Project-level custom styles below */
+
+/* Custom Scrollbar Styles */
+:root {
+  --scrollbar-track-bg: #f1f1f1;
+  --scrollbar-thumb-bg: #888;
+  --scrollbar-thumb-hover-bg: #555;
+}
+
+.dark {
+  --scrollbar-track-bg: #2d3748;
+  --scrollbar-thumb-bg: #4a5568;
+  --scrollbar-thumb-hover-bg: #718096;
+}
+
+/* For Webkit browsers (Chrome, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-bg);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover-bg);
+}
+
+/* For Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-bg) var(--scrollbar-track-bg);
+}

@@ -33,9 +33,11 @@ const InputData = ({
   setGeneratedQa,
   setError,
   addParagraphData,
+  paragraphDataSet,
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showApiHelp, setShowApiHelp] = useState(false);
+  const [status, setStatus] = useState('');
 
   const totalQuestions = numYes + numNo + numIdk;
 
@@ -64,6 +66,19 @@ ${paragraph}`;
       return;
     }
 
+    setStatus("ডুপ্লিকেট প্যারাগ্রাফ চেক করা হচ্ছে...");
+    const isDuplicate = Object.values(paragraphDataSet).some(
+      (existingParagraph) => existingParagraph.trim() === paragraph.trim()
+    );
+
+    if (isDuplicate) {
+      setStatus("ডুপ্লিকেট প্যারাগ্রাফ পাওয়া গেছে। জেনারেশন বাতিল করা হয়েছে।");
+      setIsGenerating(false);
+      setTimeout(() => setStatus(''), 5000);
+      return;
+    }
+
+    setStatus("কোনো ডুপ্লিকেট প্যারাগ্রাফ পাওয়া যায়নি। জেনারেশন শুরু হচ্ছে...");
     setIsGenerating(true);
     setError(null);
 
@@ -102,6 +117,7 @@ ${paragraph}`;
             return [...next, ...Array(needed).fill({ question: "", answer: "", correct_answer: "" })];
           });
           setIsGenerating(false);
+          setStatus('');
           return;
         } else setError("API উত্তর থেকে JSON বের করা যায়নি।");
       } catch (err) {
@@ -109,7 +125,8 @@ ${paragraph}`;
       }
     }
     setIsGenerating(false);
-    setError("জেনারেশন ব্যর্থ - সব চেষ্টা ব্যর্থ হয়েছে।");
+    setStatus("জেনারেশন ব্যর্থ - সব চেষ্টা ব্যর্থ হয়েছে।");
+    setTimeout(() => setStatus(''), 5000);
   };
 
   const handleEditChange = (index, field, value) => {
@@ -156,7 +173,7 @@ ${paragraph}`;
         </div>
 
         {/* Question counts */}
-        <div className="min-w-20">
+        <div className="w-full sm:w-auto min-w-[80px]">
           <label className="block mb-1 font-semibold">হ্যাঁ প্রশ্ন</label>
           <input
             type="number"
@@ -167,7 +184,7 @@ ${paragraph}`;
             disabled={isGenerating}
           />
         </div>
-        <div className="min-w-20">
+        <div className="w-full sm:w-auto min-w-[80px]">
           <label className="block mb-1 font-semibold">না প্রশ্ন</label>
           <input
             type="number"
@@ -178,7 +195,7 @@ ${paragraph}`;
             disabled={isGenerating}
           />
         </div>
-        <div className="min-w-20">
+        <div className="w-full sm:w-auto min-w-[80px]">
           <label className="block mb-1 font-semibold">তথ্যগত (idk)</label>
           <input
             type="number"
@@ -192,8 +209,8 @@ ${paragraph}`;
       </div>
 
       {/* Paragraph and generate button side-by-side */}
-      <div className="flex gap-4 items-center">
-        <div className="grow">
+      <div className="flex flex-col sm:flex-row gap-4 items-center">
+        <div className="grow w-full">
           <label className="block mb-1 font-semibold text-sm">প্যারাগ্রাফ (বাংলায়)</label>
           <textarea
             rows={6}
@@ -204,13 +221,13 @@ ${paragraph}`;
             disabled={isGenerating}
           />
         </div>
-        <div>
+        <div className="w-full sm:w-auto">
           <button
             onClick={generateQa}
             disabled={isGenerating || !apiKey.trim() || !paragraph.trim()}
-            className={`py-3 px-6 rounded text-white font-semibold text-sm flex items-center justify-center ${
+            className={`w-full py-3 px-6 rounded text-white font-semibold text-sm flex items-center justify-center ${
               isGenerating ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"
-            }`}
+            } disabled:opacity-60 disabled:cursor-not-allowed`}
           >
             {isGenerating ? (
               <>
@@ -242,9 +259,11 @@ ${paragraph}`;
           </button>
         </div>
       </div>
+      
+      {status && <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">{status}</div>}
 
       {/* Manual Q&A editor - always visible */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-4">
         <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">প্রশ্ন-উত্তর সম্পাদনা</h3>
         <button
           onClick={addRow}
@@ -258,13 +277,13 @@ ${paragraph}`;
 
       <div className="max-h-[480px] overflow-y-auto border border-gray-300 dark:border-gray-600 rounded p-2 space-y-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
         {generatedQa.map((qa, idx) => (
-          <div key={idx} className="flex items-start gap-2" aria-label={`প্রশ্ন উত্তর #${idx + 1}`}>
+          <div key={idx} className="flex flex-col sm:flex-row items-start gap-2" aria-label={`প্রশ্ন উত্তর #${idx + 1}`}>
             <div className="w-6 text-center select-none pt-2 text-gray-600 dark:text-gray-400">{idx + 1}</div>
             <textarea
               rows={2}
               value={qa.question || ""}
               onChange={(e) => handleEditChange(idx, "question", e.target.value)}
-              className="flex-1 p-1 border border-gray-400 dark:border-gray-600 rounded text-sm resize-none bg-white dark:bg-gray-700 dark:text-gray-100"
+              className="w-full p-1 border border-gray-400 dark:border-gray-600 rounded text-sm resize-none bg-white dark:bg-gray-700 dark:text-gray-100"
               placeholder="প্রশ্ন লিখুন (বাংলায়)"
               disabled={isGenerating}
             />
@@ -272,7 +291,7 @@ ${paragraph}`;
               rows={2}
               value={qa.answer || ""}
               onChange={(e) => handleEditChange(idx, "answer", e.target.value)}
-              className="w-32 p-1 border border-gray-400 dark:border-gray-600 rounded text-sm resize-none text-center bg-white dark:bg-gray-700 dark:text-gray-100"
+              className="w-full sm:w-32 p-1 border border-gray-400 dark:border-gray-600 rounded text-sm resize-none text-center bg-white dark:bg-gray-700 dark:text-gray-100"
               placeholder="yes/no/idk"
               disabled={isGenerating}
             />
@@ -280,7 +299,7 @@ ${paragraph}`;
               rows={2}
               value={qa.correct_answer || ""}
               onChange={(e) => handleEditChange(idx, "correct_answer", e.target.value)}
-              className="flex-1 p-1 border border-gray-400 dark:border-gray-600 rounded text-sm resize-none bg-white dark:bg-gray-700 dark:text-gray-100"
+              className="w-full p-1 border border-gray-400 dark:border-gray-600 rounded text-sm resize-none bg-white dark:bg-gray-700 dark:text-gray-100"
               placeholder="সঠিক উত্তর (এক বাক্যে)"
               disabled={isGenerating}
             />
@@ -301,7 +320,7 @@ ${paragraph}`;
       <button
         onClick={addParagraphData ? () => addParagraphData(paragraph, generatedQa) : undefined}
         className="mt-2 bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-        disabled={isGenerating || !addParagraphData}
+        disabled={isGenerating || !addParagraphData || generatedQa.length === 0}
       >
         ডেটাসেটে যোগ করুন
       </button>

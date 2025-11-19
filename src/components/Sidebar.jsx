@@ -23,7 +23,7 @@ const Sidebar = ({ currentSection, setCurrentSection, darkMode, setDarkMode, isO
       )}
 
       <aside
-        className={`w-64 p-6 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl h-screen overflow-y-auto lg:sticky lg:top-0 transition-colors duration-300
+        className={`w-64 p-4 lg:p-6 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl h-screen overflow-y-auto lg:sticky lg:top-0 transition-colors duration-300
           ${isOpen ? 'fixed inset-y-0 left-0 z-50 block' : 'hidden lg:block'}`}
         aria-label="Sidebar"
       >
@@ -39,8 +39,6 @@ const Sidebar = ({ currentSection, setCurrentSection, darkMode, setDarkMode, isO
             </button>
           )}
         </div>
-
-        <h1 className="text-3xl font-extrabold text-indigo-700 dark:text-indigo-300 mb-6">ডেটাসেট ম্যানেজার</h1>
 
         <nav>
           {menuItems.map(item => (
