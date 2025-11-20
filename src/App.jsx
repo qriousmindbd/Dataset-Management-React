@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
-import InputData from './components/InputData';
-import ShowData from './components/ShowData';
-import DownloadData from './components/DownloadData';
+import InputData from './pages/InputData';
+import ShowData from './pages/ShowData';
+import DownloadData from './pages/DownloadData';
 import NotificationModal from './components/NotificationModal';
-import ViewTables from './components/ViewTables';
+import ViewTables from './pages/ViewTables';
 import Navbar from './components/Navbar';
+import UploadData from './pages/UploadData';
+import Loader from './components/Loader';
 
 const LOCAL_STORAGE_KEYS = {
   apiKey: 'gemini_api_key',
@@ -19,7 +22,9 @@ const LOCAL_STORAGE_KEYS = {
 };
 
 const App = () => {
-  const [currentSection, setCurrentSection] = useState('input');
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
 
   // Theme state and persistence
   const [darkMode, setDarkMode] = useState(
@@ -27,7 +32,6 @@ const App = () => {
   );
 
   useEffect(() => {
-    console.log('dark mode:', darkMode);
     if (darkMode) {
       document.documentElement.classList.add('dark');
       localStorage.setItem(LOCAL_STORAGE_KEYS.theme, 'dark');
@@ -107,7 +111,7 @@ const App = () => {
 
     setQuestionAnswerData(prev => [...prev, ...newQaItems]);
     setGeneratedQa([]);
-    setCurrentSection('show');
+    navigate('/show');
   };
 
   // Handler to remove a paragraph and its related QAs
@@ -133,57 +137,91 @@ const App = () => {
     );
   };
 
+  const updateParagraph = (paraKey, newContent) => {
+    setParagraphDataSet(prev => ({ ...prev, [paraKey]: newContent }));
+  };
+
+  const removeAllParagraphs = () => {
+    setParagraphDataSet({});
+    setQuestionAnswerData([]);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-      <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-      <div className="flex flex-1">
+      {loading && <Loader />}
+      <div className="lg:hidden">
+        <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+      </div>
+      <div className="flex flex-1 overflow-hidden">
         <Sidebar
-          currentSection={currentSection}
-          setCurrentSection={setCurrentSection}
           darkMode={darkMode}
           setDarkMode={setDarkMode}
           isOpen={sidebarOpen}
           setIsOpen={setSidebarOpen}
         />
-        <main className="flex-1 p-4 lg:p-8 overflow-auto">
-          {currentSection === 'input' && (
-            <InputData
-              apiKey={apiKey}
-              setApiKey={setApiKey}
-              paragraph={paragraph}
-              setParagraph={setParagraph}
-              numYes={numYes}
-              setNumYes={setNumYes}
-              numNo={numNo}
-              setNumNo={setNumNo}
-              numIdk={numIdk}
-              setNumIdk={setNumIdk}
-              generatedQa={generatedQa}
-              setGeneratedQa={setGeneratedQa}
-              setError={setError}
-              addParagraphData={addParagraphData}
-              paragraphDataSet={paragraphDataSet}
+        <main className="flex-1 p-4 lg:p-8 overflow-auto transition-all duration-300 lg:ml-64">
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <InputData
+                  apiKey={apiKey}
+                  setApiKey={setApiKey}
+                  paragraph={paragraph}
+                  setParagraph={setParagraph}
+                  numYes={numYes}
+                  setNumYes={setNumYes}
+                  numNo={numNo}
+                  setNumNo={setNumNo}
+                  numIdk={numIdk}
+                  setNumIdk={setNumIdk}
+                  generatedQa={generatedQa}
+                  setGeneratedQa={setGeneratedQa}
+                  setError={setError}
+                  addParagraphData={addParagraphData}
+                  paragraphDataSet={paragraphDataSet}
+                  setLoading={setLoading}
+                />
+              }
             />
-          )}
-          {currentSection === 'show' && (
-            <ShowData
-              paragraphDataSet={paragraphDataSet}
-              questionAnswerData={questionAnswerData}
-              updateQaItem={updateQaItem}
-              removeQaItem={removeQaItem}
+            <Route
+              path="/show"
+              element={
+                <ShowData
+                  paragraphDataSet={paragraphDataSet}
+                  questionAnswerData={questionAnswerData}
+                  updateQaItem={updateQaItem}
+                  removeQaItem={removeQaItem}
+                />
+              }
             />
-          )}
-          {currentSection === 'download' && (
-            <DownloadData paragraphDataSet={paragraphDataSet} questionAnswerData={questionAnswerData} />
-          )}
-          {currentSection === 'viewTables' && (
-            <ViewTables
-              paragraphDataSet={Object.entries(paragraphDataSet).map(([key, content]) => ({ paragraphKey: key, content }))}
-              questionAnswerData={questionAnswerData}
-              removeParagraphItem={removeParagraphItem}
-              removeQaItem={removeQaItem}
+            <Route
+              path="/download"
+              element={<DownloadData paragraphDataSet={paragraphDataSet} questionAnswerData={questionAnswerData} />}
             />
-          )}
+            <Route
+              path="/tables"
+              element={
+                <ViewTables
+                  paragraphDataSet={Object.entries(paragraphDataSet).map(([key, content]) => ({ paragraphKey: key, content }))}
+                  questionAnswerData={questionAnswerData}
+                  removeParagraphItem={removeParagraphItem}
+                  removeQaItem={removeQaItem}
+                  updateParagraph={updateParagraph}
+                  removeAllParagraphs={removeAllParagraphs}
+                />
+              }
+            />
+            <Route
+              path="/upload"
+              element={
+                <UploadData
+                  setParagraphDataSet={setParagraphDataSet}
+                  setQuestionAnswerData={setQuestionAnswerData}
+                />
+              }
+            />
+          </Routes>
         </main>
       </div>
 

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import { CSVLink } from "react-csv";
-import NotificationModal from "./NotificationModal";
+import NotificationModal from "../components/NotificationModal";
 
 const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
   const [notification, setNotification] = useState(null);

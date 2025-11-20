@@ -1,32 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import ConfirmationModal from './ConfirmationModal';
-
-// --- Modal component as before ---
-const Modal = ({ show, onClose, title, children }) => {
-  if (!show) return null;
-
-  return (
-    <>
-      <div
-        className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-40"
-        onClick={onClose}
-      ></div>
-
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full p-5 relative">
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white text-2xl"
-          >
-            ×
-          </button>
-          <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">{title}</h2>
-          <div className="text-gray-700 dark:text-gray-300">{children}</div>
-        </div>
-      </div>
-    </>
-  );
-};
+import ConfirmationModal from '../components/ConfirmationModal';
+import Highlight from '../components/Highlight';
+import Modal from '../components/Modal';
 
 const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQaItem }) => {
   const [editingId, setEditingId] = useState(null);
@@ -34,8 +9,10 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
   const [modalParagraph, setModalParagraph] = useState(null);
   const [searchText, setSearchText] = useState('');
   const [showDuplicates, setShowDuplicates] = useState(false);
+  const [showOnlyEmpty, setShowOnlyEmpty] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [selectedForDeletion, setSelectedForDeletion] = useState(new Set());
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
 
   const startEdit = (id, question, answer, correct_answer) => {
     setEditingId(id);
@@ -62,18 +39,35 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
     setDeletingId(null);
   };
 
-  // Filtered dataset by searchText only when duplicates view is off
+  // Filtered dataset logic
   const filteredData = useMemo(() => {
-    if (showDuplicates) return questionAnswerData;
-    if (!searchText.trim()) return questionAnswerData;
-    const lower = searchText.toLowerCase();
-    return questionAnswerData.filter(
-      item =>
-        item.question.toLowerCase().includes(lower) ||
-        item.answer.toLowerCase().includes(lower) ||
-        (item.correct_answer && item.correct_answer.toLowerCase().includes(lower))
-    );
-  }, [searchText, questionAnswerData, showDuplicates]);
+    if (showDuplicates) return []; // In duplicate mode, this list is not used
+
+    let data = questionAnswerData;
+
+    // Filter for empty fields if the toggle is active
+    if (showOnlyEmpty) {
+      data = data.filter(
+        item =>
+          !item.question || item.question.trim() === '' ||
+          !item.answer || item.answer.trim() === '' ||
+          !item.correct_answer || item.correct_answer.trim() === ''
+      );
+    }
+
+    // Apply search text filter on top of the (potentially) filtered data
+    if (searchText.trim()) {
+      const lower = searchText.toLowerCase();
+      return data.filter(
+        item =>
+          (item.question && item.question.toLowerCase().includes(lower)) ||
+          (item.answer && item.answer.toLowerCase().includes(lower)) ||
+          (item.correct_answer && item.correct_answer.toLowerCase().includes(lower))
+      );
+    }
+
+    return data;
+  }, [searchText, questionAnswerData, showDuplicates, showOnlyEmpty]);
 
   const duplicatesByQuestion = useMemo(() => {
     if (!showDuplicates) return [];
@@ -115,8 +109,14 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
     setSelectedForDeletion(new Set());
   };
 
+  const handleDeleteAllEmpty = () => {
+    const idsToDelete = filteredData.map(item => item.id);
+    idsToDelete.forEach(id => removeQaItem(id));
+    setShowDeleteAllConfirm(false);
+  };
+
   return (
-    <div className="overflow-auto max-h-[650px] p-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded shadow relative">
+    <div className="overflow-y-auto overflow-x-hidden p-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded shadow relative" style={{ height: 'calc(100vh - 70px)' }}>
       <h2 className="text-2xl font-bold mb-4">
         সংরক্ষিত প্রশ্ন ও উত্তর ({questionAnswerData.length})
       </h2>
@@ -132,10 +132,13 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
           disabled={showDuplicates}
         />
         <button
-          onClick={() => setShowDuplicates(false)}
-          disabled={showDuplicates === false}
+          onClick={() => {
+            setShowDuplicates(false);
+            setShowOnlyEmpty(false);
+          }}
+          disabled={!showDuplicates && !showOnlyEmpty}
           className={`px-4 py-2 rounded text-sm font-medium ${
-            showDuplicates === false
+            !showDuplicates && !showOnlyEmpty
               ? 'bg-indigo-600 text-white cursor-not-allowed'
               : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
           }`}
@@ -145,18 +148,46 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
         <button
           onClick={() => {
             setShowDuplicates(true);
+            setShowOnlyEmpty(false);
             setSearchText('');
           }}
-          disabled={showDuplicates === true}
+          disabled={showDuplicates}
           className={`px-4 py-2 rounded text-sm font-medium ${
-            showDuplicates === true
+            showDuplicates
               ? 'bg-red-600 text-white cursor-not-allowed'
               : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
           }`}
         >
           ডুপ্লিকেট অনুসন্ধান
         </button>
+        <button
+          onClick={() => {
+            setShowOnlyEmpty(true);
+            setShowDuplicates(false);
+            setSearchText('');
+          }}
+          disabled={showOnlyEmpty}
+          className={`px-4 py-2 rounded text-sm font-medium ${
+            showOnlyEmpty
+              ? 'bg-yellow-500 text-white cursor-not-allowed'
+              : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+          }`}
+        >
+          খালি ডেটা খুঁজুন
+        </button>
       </div>
+
+      {/* Delete All button for empty data */}
+      {showOnlyEmpty && filteredData.length > 0 && (
+        <div className="mb-4">
+          <button
+            onClick={() => setShowDeleteAllConfirm(true)}
+            className="px-4 py-2 rounded text-sm font-semibold bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400"
+          >
+            Delete All Displayed Empty Data ({filteredData.length})
+          </button>
+        </div>
+      )}
 
       {/* DUPLICATE View */}
       {showDuplicates && (
@@ -202,15 +233,20 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
       {/* NORMAL filtered list */}
       {!showDuplicates && (
         <>
+          {searchText.trim() && (
+            <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+              {filteredData.length ? "মোট " + filteredData.length + " টি ফলাফল পাওয়া গেছে" : ""}
+            </p>
+          )}
           {filteredData.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400">কোনো ডেটা পাওয়া যায়নি।</p>
           ) : (
             filteredData.map((item, index) => (
               <div
                 key={item.id}
-                className="mb-4 p-3 border border-gray-300 dark:border-gray-600 rounded shadow-sm"
+                className="mb-2 p-2 border border-gray-300 dark:border-gray-600 rounded shadow-sm"
               >
-                <p className="mb-2 text-gray-700 dark:text-gray-400 text-sm">
+                <p className="mb-1 text-gray-700 dark:text-gray-400 text-xs">
                   Paragraph Ref:{" "}
                   <span
                     onClick={() =>
@@ -226,8 +262,8 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
                   <>
                     <label className="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-400">প্রশ্ন:</label>
                     <textarea
-                      rows={2}
-                      className="w-full p-2 border border-blue-400 rounded mb-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      rows={1}
+                      className="w-full p-1 border border-blue-400 rounded mb-1 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       value={editFields.question}
                       onChange={(e) =>
                         setEditFields({ ...editFields, question: e.target.value })
@@ -235,8 +271,8 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
                     />
                     <label className="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-400">উত্তর:</label>
                     <textarea
-                      rows={2}
-                      className="w-full p-2 border border-blue-400 rounded mb-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      rows={1}
+                      className="w-full p-1 border border-blue-400 rounded mb-1 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       value={editFields.answer}
                       onChange={(e) =>
                         setEditFields({ ...editFields, answer: e.target.value })
@@ -244,21 +280,21 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
                     />
                     <label className="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-400">সঠিক উত্তর:</label>
                     <textarea
-                      rows={2}
-                      className="w-full p-2 border border-blue-400 rounded mb-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      rows={1}
+                      className="w-full p-1 border border-blue-400 rounded mb-1 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       value={editFields.correct_answer}
                       onChange={(e) =>
                         setEditFields({ ...editFields, correct_answer: e.target.value })
                       }
                     />
                     <button
-                      className="bg-blue-600 text-white px-4 py-1 rounded mr-2 text-sm"
+                      className="bg-blue-600 text-white px-2 py-0.5 rounded mr-2 text-xs"
                       onClick={() => saveEdit(item.id)}
                     >
                       সেভ করুন
                     </button>
                     <button
-                      className="bg-gray-300 dark:bg-gray-600 px-4 py-1 rounded text-sm"
+                      className="bg-gray-300 dark:bg-gray-600 px-2 py-0.5 rounded text-xs"
                       onClick={() => setEditingId(null)}
                     >
                       বাতিল
@@ -266,29 +302,29 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
                   </>
                 ) : (
                   <>
-                    <p className="text-sm font-semibold mb-1">
-                      <strong>Q{index + 1}:</strong> {item.question}
+                    <p className="text-xs font-semibold mb-1">
+                      <strong>Q{index + 1}:</strong> <Highlight text={item.question} highlight={searchText} />
                     </p>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
-                      <strong>A:</strong> {item.answer}
+                    <p className="text-xs text-gray-700 dark:text-gray-300 mb-1">
+                      <strong>A:</strong> <Highlight text={item.answer} highlight={searchText} />
                     </p>
                     {item.correct_answer && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        <strong>সঠিক উত্তর:</strong> {item.correct_answer}
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                        <strong>সঠিক উত্তর:</strong> <Highlight text={item.correct_answer} highlight={searchText} />
                       </p>
                     )}
-                    <div className="mt-3 space-x-2">
+                    <div className="mt-2 space-x-2">
                       <button
                         onClick={() =>
                           startEdit(item.id, item.question, item.answer, item.correct_answer)
                         }
-                        className="text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-500 rounded px-3 py-1 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                        className="text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-500 rounded px-2 py-0.5 text-xs hover:bg-blue-50 dark:hover:bg-blue-900/30"
                       >
                         এডিট
                       </button>
                       <button
                         onClick={() => handleDeleteRequest(item.id)}
-                        className="text-red-600 dark:text-red-400 border border-red-600 dark:border-red-500 rounded px-3 py-1 text-sm hover:bg-red-50 dark:hover:bg-red-900/30"
+                        className="text-red-600 dark:text-red-400 border border-red-600 dark:border-red-500 rounded px-2 py-0.5 text-xs hover:bg-red-50 dark:hover:bg-red-900/30"
                       >
                         মুছে ফেলুন
                       </button>
@@ -315,9 +351,19 @@ const ShowData = ({ paragraphDataSet, questionAnswerData, updateQaItem, removeQa
         show={deletingId !== null}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
-        title="নিশ্চিতকরণ মুছুন"
+        title="নিশ্চিতকরণ"
       >
         আপনি কি নিশ্চিত যে আপনি এই আইটেমটি মুছতে চান? এই ক্রিয়াটি ফিরিয়ে আনা যাবে না।
+      </ConfirmationModal>
+
+      {/* Confirmation Modal for Deleting All Empty Data */}
+      <ConfirmationModal
+        show={showDeleteAllConfirm}
+        onClose={() => setShowDeleteAllConfirm(false)}
+        onConfirm={handleDeleteAllEmpty}
+        title="Confirm Deleting All"
+      >
+        Are you sure you want to delete all {filteredData.length} displayed items with empty fields? This action cannot be undone.
       </ConfirmationModal>
     </div>
   );

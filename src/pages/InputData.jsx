@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import HelpModal from "./HelpModal";
-import NotificationModal from "./NotificationModal";
+import HelpModal from "../components/HelpModal";
+import NotificationModal from "../components/NotificationModal";
 
 const QA_SCHEMA = {
   type: "ARRAY",
@@ -35,6 +35,7 @@ const InputData = ({
   setError,
   addParagraphData,
   paragraphDataSet,
+  setLoading,
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showApiHelp, setShowApiHelp] = useState(false);
@@ -68,6 +69,7 @@ ${paragraph}`;
       return;
     }
 
+    setLoading(true);
     setStatus("ডুপ্লিকেট প্যারাগ্রাফ চেক করা হচ্ছে...");
     const isDuplicate = Object.values(paragraphDataSet).some(
       (existingParagraph) => existingParagraph.trim() === paragraph.trim()
@@ -76,6 +78,7 @@ ${paragraph}`;
     if (isDuplicate) {
       setStatus("ডুপ্লিকেট প্যারাগ্রাফ পাওয়া গেছে। জেনারেশন বাতিল করা হয়েছে।");
       setIsGenerating(false);
+      setLoading(false);
       setTimeout(() => setStatus(''), 5000);
       return;
     }
@@ -120,6 +123,7 @@ ${paragraph}`;
           });
           setIsGenerating(false);
           setStatus('');
+          setLoading(false);
           return;
         } else setError("API উত্তর থেকে JSON বের করা যায়নি।");
       } catch (err) {
@@ -127,6 +131,7 @@ ${paragraph}`;
       }
     }
     setIsGenerating(false);
+    setLoading(false);
     setStatus("জেনারেশন ব্যর্থ - সব চেষ্টা ব্যর্থ হয়েছে।");
     setTimeout(() => setStatus(''), 5000);
   };
@@ -150,9 +155,12 @@ ${paragraph}`;
   const handleAddToDataset = () => {
     // 1. Filtering out empty Q&A rows
     const filteredQa = generatedQa.filter(
-      (qa) => 
+      (qa) =>
+        qa.question &&
         qa.question.trim() !== "" &&
+        qa.answer &&
         qa.answer.trim() !== "" &&
+        qa.correct_answer &&
         qa.correct_answer.trim() !== ""
     );
 

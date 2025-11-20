@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply text-sm sm:text-base;
+  html, body, #root {
+    @apply h-full;
   }
 }
 
@@ -46,4 +46,28 @@
 html {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb-bg) var(--scrollbar-track-bg);
+}
+
+.drop-zone {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.drop-zone.is-active {
+  border-color: #3498db;
+  background-color: #f0f8ff;
+}
+
+.drop-zone p {
+  margin: 0;
+  font-size: 1rem;
+  color: #666;
+}
+
+.drop-zone .file-input {
+  display: none;
 }
