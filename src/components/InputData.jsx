@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import HelpModal from "./HelpModal";
+import NotificationModal from "./NotificationModal";
 
 const QA_SCHEMA = {
   type: "ARRAY",
@@ -38,6 +39,7 @@ const InputData = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [showApiHelp, setShowApiHelp] = useState(false);
   const [status, setStatus] = useState('');
+  const [notification, setNotification] = useState(null);
 
   const totalQuestions = numYes + numNo + numIdk;
 
@@ -144,6 +146,31 @@ ${paragraph}`;
   const addRow = () => {
     setGeneratedQa((prev) => [...prev, { question: "", answer: "", correct_answer: "" }]);
   };
+
+  const handleAddToDataset = () => {
+    // 1. Filtering out empty Q&A rows
+    const filteredQa = generatedQa.filter(
+      (qa) => 
+        qa.question.trim() !== "" &&
+        qa.answer.trim() !== "" &&
+        qa.correct_answer.trim() !== ""
+    );
+
+    // 2. check if the paragraph is empty
+    if (!paragraph.trim()) {
+      setNotification("ডাটাসেটে যোগ করতে একটি প্যারাগ্রাফ লিখুন");
+      return;
+    }
+
+    // 3. Check if at least one QA pair is available or not
+    if (filteredQa.length === 0) {
+      setNotification("কমপক্ষে ১টি প্রশ্ন-উত্তর যোগ করুন");
+      return;
+    }
+
+    // 4. If validation passes, call the original function to add the data
+    addParagraphData(paragraph, filteredQa);
+  }
 
   return (
     <div className="space-y-4">
@@ -310,7 +337,7 @@ ${paragraph}`;
               type="button"
               title="সারি মুছুন"
             >
-              ×
+              ❌
             </button>
           </div>
         ))}
@@ -318,9 +345,9 @@ ${paragraph}`;
 
       {/* Add to Dataset */}
       <button
-        onClick={addParagraphData ? () => addParagraphData(paragraph, generatedQa) : undefined}
+        onClick={handleAddToDataset}
         className="mt-2 bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-        disabled={isGenerating || !addParagraphData || generatedQa.length === 0}
+        disabled={isGenerating || !addParagraphData || generatedQa.length === 0 || !paragraph.trim()}
       >
         ডেটাসেটে যোগ করুন
       </button>
@@ -332,12 +359,20 @@ ${paragraph}`;
         title="Gemini API Key পাওয়ার ধাপসমূহ"
         steps={[
           "<strong>ধাপ ১:</strong> আপনার Google অ্যাকাউন্টে লগইন করুন।",
-          '<strong>ধাপ ২:</strong> যান <a href="https://aistudio.google.com" target="_blank" class="text-blue-600 underline">Google AI Studio</a> ওয়েবসাইটে।',
-          '<strong>ধাপ ৩:</strong> "Get API key in Google AI Studio" বোতামটি ক্লিক করুন।',
-          "<strong>ধাপ ৪:</strong> Terms of Service পড়ুন এবং সম্মতি দিন।",
+          '<strong>ধাপ ২:</strong> <a href="https://aistudio.google.com" target="_blank" class="text-blue-600 underline">Google AI Studio</a> ওয়েবসাইটে  যান।',
+          '<strong>ধাপ ৩:</strong> "Get API key" অথবা "Create API key" এ ক্লিক করুন।',
+          "<strong>ধাপ ৪:</strong> Terms of Service পড়ুন এবং সম্মতি দিন (প্রযোজ্য ক্ষেত্রে)।",
           "<strong>ধাপ ৫:</strong> তৈরি হওয়া API key কপি করে এখানে পেস্ট করুন।",
         ]}
       />
+
+      <NotificationModal
+        show={!!notification}
+        onClose={() => setNotification(null)}
+        title="বিজ্ঞপ্তি"
+      >
+        {notification}
+      </NotificationModal>
     </div>
   );
 };
