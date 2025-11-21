@@ -150,9 +150,9 @@ const UploadData = ({ setParagraphDataSet, setQuestionAnswerData }) => {
             onChange={handleFileUpload}
             className="file-input"
           />
-          <p>Drag & drop a file here, or click to select a file</p>
+          <p>এখানে ফাইল ড্র্যাগ করে আনুন অথবা ফাইল সিলেক্ট করুন <br/> ফাইলের ধরণ: CSV, XLSX, JSON</p>
           <button className="mt-4 px-4 py-2 rounded text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700">
-            Select File
+            ফাইল সিলেক্ট করুন
           </button>
         </div>
       )}
@@ -161,8 +161,8 @@ const UploadData = ({ setParagraphDataSet, setQuestionAnswerData }) => {
 
       {uploadedData.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-xl font-semibold mb-2">Uploaded Data ({fileName})</h3>
-          <div className="overflow-auto mb-4 border border-gray-300 dark:border-gray-700 rounded" style={{ height: 'calc(100vh - 400px)' }}>
+          <h3 className="text-xl font-semibold mb-2">ফাইলের নাম: <span className="font-normal bg-slate-500 text-white px-1 rounded-lg">{fileName}</span></h3>
+          <div className="overflow-auto mb-4 border border-gray-300 dark:border-gray-700 rounded" style={{ height: 'calc(100vh - 250px)' }}>
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
                 <tr>
@@ -186,13 +186,13 @@ const UploadData = ({ setParagraphDataSet, setQuestionAnswerData }) => {
             onClick={handleMergeData}
             className="px-4 py-2 rounded text-sm font-semibold bg-green-600 text-white hover:bg-green-700"
           >
-            Merge with Question-Answer Data
+            বর্তমান ডেটাসেটে মার্জ করুন
           </button>
           <button
             onClick={handleCancel}
             className="ml-2 px-4 py-2 rounded text-sm font-semibold bg-red-600 text-white hover:bg-red-700"
           >
-            Cancel
+            বাতিল করুন
           </button>
         </div>
       )}

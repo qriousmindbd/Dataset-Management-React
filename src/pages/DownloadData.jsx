@@ -6,6 +6,9 @@ import NotificationModal from "../components/NotificationModal";
 
 const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
   const [notification, setNotification] = useState(null);
+  const [mergedFileName, setMergedFileName] = useState("merged_dataset");
+  const [paragraphFileName, setParagraphFileName] = useState("paragraph_dataset");
+  const [qaFileName, setQaFileName] = useState("qa_dataset");
 
   const downloadJSON = (content, filename) => {
     try {
@@ -102,16 +105,26 @@ const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
         <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-200 text-sm">
           সম্পূর্ণ মার্জড ডেটাসেট <span className="text-xs text-gray-500">({mergedData.length} আইটেম)</span>
         </h3>
+        <div className="mb-2">
+          <label className="block text-xs font-semibold mb-1" htmlFor="mergedFileName">ফাইলের নাম:</label>
+          <input
+            id="mergedFileName"
+            type="text"
+            value={mergedFileName}
+            onChange={(e) => setMergedFileName(e.target.value)}
+            className="w-full p-1 border border-gray-300 rounded dark:bg-gray-700 dark:text-gray-100 text-sm"
+          />
+        </div>
         <div className="flex gap-2">
           <button
-            onClick={() => downloadJSON(mergedData, "merged_dataset.json")}
+            onClick={() => downloadJSON(mergedData, `${mergedFileName || 'merged_dataset'}.json`)}
             className="flex-1 py-2 px-3 bg-green-600 dark:bg-green-500 text-white rounded text-sm hover:bg-green-700 dark:hover:bg-green-400 transition-colors"
           >
             JSON
           </button>
           <CSVLink
             data={mergedData}
-            filename={"merged_dataset.csv"}
+            filename={`${mergedFileName || 'merged_dataset'}.csv`}
             className="flex-1 text-center py-2 px-3 bg-green-500 dark:bg-green-600 text-white rounded text-sm hover:bg-green-600 dark:hover:bg-green-500 transition-colors"
             onClick={(event) => {
               if (!mergedData.length) {
@@ -123,7 +136,7 @@ const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
             CSV
           </CSVLink>
           <button
-            onClick={() => downloadXLSX(mergedData, "merged_dataset.xlsx")}
+            onClick={() => downloadXLSX(mergedData, `${mergedFileName || 'merged_dataset'}.xlsx`)}
             className="flex-1 py-2 px-3 bg-green-700 dark:bg-green-800 text-white rounded text-sm hover:bg-green-800 dark:hover:bg-green-700 transition-colors"
           >
             XLSX
@@ -136,16 +149,26 @@ const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
         <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-200 text-sm">
           প্যারাগ্রাফ ডেটাসেট <span className="text-xs text-gray-500">({paragraphCsvData.length} আইটেম)</span>
         </h3>
+        <div className="mb-2">
+          <label className="block text-xs font-semibold mb-1" htmlFor="paragraphFileName">ফাইলের নাম:</label>
+          <input
+            id="paragraphFileName"
+            type="text"
+            value={paragraphFileName}
+            onChange={(e) => setParagraphFileName(e.target.value)}
+            className="w-full p-1 border border-gray-300 rounded dark:bg-gray-700 dark:text-gray-100 text-sm"
+          />
+        </div>
         <div className="flex gap-2">
           <button
-            onClick={() => downloadJSON(paragraphDataSet, "paragraph_dataset.json")}
+            onClick={() => downloadJSON(paragraphDataSet, `${paragraphFileName || 'paragraph_dataset'}.json`)}
             className="flex-1 py-2 px-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded text-sm hover:bg-indigo-700 dark:hover:bg-indigo-400 transition-colors"
           >
             JSON
           </button>
           <CSVLink
             data={paragraphCsvData}
-            filename={"paragraph_dataset.csv"}
+            filename={`${paragraphFileName || 'paragraph_dataset'}.csv`}
             className="flex-1 text-center py-2 px-3 bg-yellow-500 dark:bg-yellow-600 text-white rounded text-sm hover:bg-yellow-600 dark:hover:bg-yellow-500 transition-colors"
             onClick={(event) => {
               if (!paragraphCsvData.length) {
@@ -157,7 +180,7 @@ const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
             CSV
           </CSVLink>
           <button
-            onClick={() => downloadXLSX(paragraphDataSet, "paragraph_dataset.xlsx")}
+            onClick={() => downloadXLSX(paragraphDataSet, `${paragraphFileName || 'paragraph_dataset'}.xlsx`)}
             className="flex-1 py-2 px-3 bg-pink-600 dark:bg-pink-500 text-white rounded text-sm hover:bg-pink-700 dark:hover:bg-pink-400 transition-colors"
           >
             XLSX
@@ -170,16 +193,26 @@ const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
         <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-200 text-sm">
           প্রশ্ন-উত্তর ডেটাসেট <span className="text-xs text-gray-500">({safeQuestionAnswerData.length} আইটেম)</span>
         </h3>
+        <div className="mb-2">
+          <label className="block text-xs font-semibold mb-1" htmlFor="qaFileName">ফাইলের নাম:</label>
+          <input
+            id="qaFileName"
+            type="text"
+            value={qaFileName}
+            onChange={(e) => setQaFileName(e.target.value)}
+            className="w-full p-1 border border-gray-300 rounded dark:bg-gray-700 dark:text-gray-100 text-sm"
+          />
+        </div>
         <div className="flex gap-2">
           <button
-            onClick={() => downloadJSON(questionAnswerData, "qa_dataset.json")}
+            onClick={() => downloadJSON(questionAnswerData, `${qaFileName || 'qa_dataset'}.json`)}
             className="flex-1 py-2 px-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded text-sm hover:bg-indigo-700 dark:hover:bg-indigo-400 transition-colors"
           >
             JSON
           </button>
           <CSVLink
             data={safeQuestionAnswerData}
-            filename={"qa_dataset.csv"}
+            filename={`${qaFileName || 'qa_dataset'}.csv`}
             className="flex-1 text-center py-2 px-3 bg-yellow-500 dark:bg-yellow-600 text-white rounded text-sm hover:bg-yellow-600 dark:hover:bg-yellow-500 transition-colors"
             onClick={(event) => {
               if (!safeQuestionAnswerData.length) {
@@ -191,7 +224,7 @@ const DownloadData = ({ paragraphDataSet, questionAnswerData }) => {
             CSV
           </CSVLink>
           <button
-            onClick={() => downloadXLSX(questionAnswerData, "qa_dataset.xlsx")}
+            onClick={() => downloadXLSX(questionAnswerData, `${qaFileName || 'qa_dataset'}.xlsx`)}
             className="flex-1 py-2 px-3 bg-pink-600 dark:bg-pink-500 text-white rounded text-sm hover:bg-pink-700 dark:hover:bg-pink-400 transition-colors"
           >
             XLSX
