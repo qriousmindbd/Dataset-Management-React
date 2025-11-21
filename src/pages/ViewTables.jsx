@@ -67,7 +67,7 @@ const ViewTables = ({ paragraphDataSet, questionAnswerData, removeParagraphItem,
           সব মুছে ফেলুন
         </button>
       </h3>
-      <div className="overflow-y-auto overflow-x-hidden mb-6 border border-gray-300 dark:border-gray-700 rounded" style={{ height: 'calc(50vh - 120px)' }}>
+      <div className="overflow-y-auto overflow-x-hidden mb-6 border border-gray-300 dark:border-gray-700 rounded" style={{ maxHeight: 'calc(50vh - 120px)' }}>
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
             <tr>
@@ -111,7 +111,7 @@ const ViewTables = ({ paragraphDataSet, questionAnswerData, removeParagraphItem,
       <h3 className="text-xl font-semibold mb-2 flex justify-between items-center">
         <span>প্রশ্ন-উত্তর ডেটাসেট ({questionAnswerData.length})</span>
       </h3>
-      <div className="overflow-y-auto overflow-x-hidden border border-gray-300 dark:border-gray-700 rounded" style={{ height: 'calc(50vh - 120px)' }}>
+      <div className="overflow-y-auto overflow-x-hidden border border-gray-300 dark:border-gray-700 rounded" style={{ maxHeight: 'calc(50vh - 120px)' }}>
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
             <tr>
