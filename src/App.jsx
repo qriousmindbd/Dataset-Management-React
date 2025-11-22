@@ -12,10 +12,6 @@ import Loader from './components/Loader';
 
 const LOCAL_STORAGE_KEYS = {
   apiKey: 'gemini_api_key',
-  paragraph: 'input_paragraph',
-  yesCount: 'num_yes_questions',
-  noCount: 'num_no_questions',
-  idkCount: 'num_idk_questions',
   paraDataset: 'paragraph_dataset',
   qaDataset: 'qa_dataset',
   theme: 'app_theme', // Theme key for dark/light mode persistence
@@ -46,11 +42,6 @@ const App = () => {
 
   // Lifted states persisted locally
   const [apiKey, setApiKey] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.apiKey) || '');
-  const [paragraph, setParagraph] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.paragraph) || '');
-  const [numYes, setNumYes] = useState(() => parseInt(localStorage.getItem(LOCAL_STORAGE_KEYS.yesCount)) || 2);
-  const [numNo, setNumNo] = useState(() => parseInt(localStorage.getItem(LOCAL_STORAGE_KEYS.noCount)) || 2);
-  const [numIdk, setNumIdk] = useState(() => parseInt(localStorage.getItem(LOCAL_STORAGE_KEYS.idkCount)) || 2);
-  const [generatedQa, setGeneratedQa] = useState([]);
   const [error, setError] = useState(null);
 
   const [paragraphDataSet, setParagraphDataSet] = useState(() => {
@@ -74,22 +65,6 @@ const App = () => {
   }, [apiKey]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.paragraph, paragraph);
-  }, [paragraph]);
-
-  useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.yesCount, numYes.toString());
-  }, [numYes]);
-
-  useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.noCount, numNo.toString());
-  }, [numNo]);
-
-  useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.idkCount, numIdk.toString());
-  }, [numIdk]);
-
-  useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEYS.paraDataset, JSON.stringify(paragraphDataSet));
   }, [paragraphDataSet]);
 
@@ -110,7 +85,6 @@ const App = () => {
     }));
 
     setQuestionAnswerData(prev => [...prev, ...newQaItems]);
-    setGeneratedQa([]);
     navigate('/show');
   };
 
@@ -167,16 +141,6 @@ const App = () => {
                 <InputData
                   apiKey={apiKey}
                   setApiKey={setApiKey}
-                  paragraph={paragraph}
-                  setParagraph={setParagraph}
-                  numYes={numYes}
-                  setNumYes={setNumYes}
-                  numNo={numNo}
-                  setNumNo={setNumNo}
-                  numIdk={numIdk}
-                  setNumIdk={setNumIdk}
-                  generatedQa={generatedQa}
-                  setGeneratedQa={setGeneratedQa}
                   setError={setError}
                   addParagraphData={addParagraphData}
                   paragraphDataSet={paragraphDataSet}
